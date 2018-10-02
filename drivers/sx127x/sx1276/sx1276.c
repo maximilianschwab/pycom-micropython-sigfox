@@ -34,6 +34,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include "sx1276-board.h"
 #include "esp_attr.h"
 #include "esp32_mphal.h"
+#include "../../../cc3200/FreeRTOS/Source/include/FreeRTOS.h"
 
 /*
  * Local types definition
@@ -487,7 +488,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
                         uint8_t coderate, uint16_t preambleLen,
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
-{
+{   
     SX1276SetModem( modem );
 
     SX1276SetRfTxPower( power );
@@ -499,12 +500,19 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
     case MODEM_LORA:
         {
             SX1276.Settings.LoRa.Power = power;
-            if( bandwidth > 2 )
+            if( bandwidth > 3 )
             {
-                // Fatal error: When using LoRa modem only bandwidths 125, 250 and 500 kHz are supported
+                // Fatal error: When using LoRa modem only bandwidths 125, 250, 500 and 7.8 kHz are supported
+                mp_printf(&mp_plat_print, "Bandwidth loop...\n");
                 while( 1 );
             }
+            
+            if( bandwidth == 3){
+                bandwidth = 0;//set bandwidth to 7.8kHz
+                mp_printf(&mp_plat_print, "Set bandwidth to 7.8kHz\n");
+            }else{
             bandwidth += 7;
+            }
             SX1276.Settings.LoRa.Bandwidth = bandwidth;
             SX1276.Settings.LoRa.Datarate = datarate;
             SX1276.Settings.LoRa.Coderate = coderate;

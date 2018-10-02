@@ -137,7 +137,8 @@ typedef enum {
 typedef enum {
     E_LORA_BW_125_KHZ = 0,
     E_LORA_BW_250_KHZ = 1,
-    E_LORA_BW_500_KHZ = 2
+    E_LORA_BW_500_KHZ = 2,
+    E_LORA_BW_78_KHZ = 3
 } lora_bandwidth_t;
 
 typedef enum {
@@ -1223,7 +1224,7 @@ static bool lora_validate_data_rate (uint32_t data_rate) {
 }
 
 static void lora_validate_bandwidth (uint8_t bandwidth) {
-    if (bandwidth > E_LORA_BW_500_KHZ) {
+    if (bandwidth > E_LORA_BW_78_KHZ) {
         nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "bandwidth %d not supported", bandwidth));
     }
 }
@@ -1298,9 +1299,7 @@ static void lora_get_config (lora_cmd_data_t *cmd_data) {
 
 static void lora_send_cmd (lora_cmd_data_t *cmd_data) {
     xEventGroupClearBits(LoRaEvents, LORA_STATUS_COMPLETED | LORA_STATUS_ERROR | LORA_STATUS_MSG_SIZE);
-
-    xQueueSend(xCmdQueue, (void *)cmd_data, (TickType_t)portMAX_DELAY);
-
+    BaseType_t result_xQueueSend =  xQueueSend(xCmdQueue, (void *)cmd_data, (TickType_t)portMAX_DELAY);
     uint32_t result = xEventGroupWaitBits(LoRaEvents,
                                           LORA_STATUS_COMPLETED | LORA_STATUS_ERROR,
                                           pdTRUE,   // clear on exit
@@ -1525,6 +1524,7 @@ static mp_obj_t lora_init_helper(lora_obj_t *self, const mp_arg_val_t *args) {
 
     // send message to the lora task
     cmd_data.cmd = E_LORA_CMD_INIT;
+
     lora_send_cmd(&cmd_data);
 
     return mp_const_none;
@@ -2148,6 +2148,7 @@ STATIC const mp_map_elem_t lora_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_BW_125KHZ),           MP_OBJ_NEW_SMALL_INT(E_LORA_BW_125_KHZ) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BW_250KHZ),           MP_OBJ_NEW_SMALL_INT(E_LORA_BW_250_KHZ) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_BW_500KHZ),           MP_OBJ_NEW_SMALL_INT(E_LORA_BW_500_KHZ) },
+    { MP_OBJ_NEW_QSTR(MP_QSTR_BW_78KHZ),            MP_OBJ_NEW_SMALL_INT(E_LORA_BW_78_KHZ)},
 
     { MP_OBJ_NEW_QSTR(MP_QSTR_CODING_4_5),          MP_OBJ_NEW_SMALL_INT(E_LORA_CODING_4_5) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_CODING_4_6),          MP_OBJ_NEW_SMALL_INT(E_LORA_CODING_4_6) },
