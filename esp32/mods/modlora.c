@@ -810,7 +810,7 @@ static void TASK_LoRa (void *pvParameters) {
                             lora_obj.state = E_LORA_STATE_IDLE;
                         }
                     } else {
-                        // radio initialization
+                        // radio initialization for raw LoRa mode
                         RadioEvents.TxDone = OnTxDone;
                         RadioEvents.RxDone = OnRxDone;
                         RadioEvents.TxTimeout = OnTxTimeout;
@@ -1078,11 +1078,16 @@ static IRAM_ATTR void OnRxError (void) {
     lora_obj.state = E_LORA_STATE_RX_ERROR;
 }
 
+/*
+Setup the LoRa modem
+*/
 static void lora_radio_setup (lora_init_cmd_data_t *init_data) {
     uint16_t symbol_to = 8;
 
+    //Setup modem for MODEM_LORA mode
     Radio.SetModem(MODEM_LORA);
 
+    //Setup synchword for public (0x34) or private mode (0x12)
     if (init_data->public) {
         Radio.Write(REG_LR_SYNCWORD, LORA_MAC_PUBLIC_SYNCWORD);
     } else {

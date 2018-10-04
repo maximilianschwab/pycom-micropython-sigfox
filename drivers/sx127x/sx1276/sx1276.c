@@ -503,13 +503,11 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
             if( bandwidth > 3 )
             {
                 // Fatal error: When using LoRa modem only bandwidths 125, 250, 500 and 7.8 kHz are supported
-                mp_printf(&mp_plat_print, "Bandwidth loop...\n");
                 while( 1 );
             }
             
             if( bandwidth == 3){
                 bandwidth = 0;//set bandwidth to 7.8kHz
-                mp_printf(&mp_plat_print, "Set bandwidth to 7.8kHz\n");
             }else{
             bandwidth += 7;
             }
@@ -998,6 +996,9 @@ IRAM_ATTR void SX1276SetOpMode( uint8_t opMode )
     SX1276Write( REG_OPMODE, ( SX1276Read( REG_OPMODE ) & RF_OPMODE_MASK ) | opMode );
 }
 
+/*
+Setup the SX1276 modem for MODEM_LORA or MODEM_FSK mode
+*/
 IRAM_ATTR void SX1276SetModem( RadioModems_t modem )
 {
     if( ( SX1276Read( REG_OPMODE ) & RFLR_OPMODE_LONGRANGEMODE_ON ) != 0 )
@@ -1031,6 +1032,9 @@ IRAM_ATTR void SX1276SetModem( RadioModems_t modem )
 
         SX1276Write( REG_DIOMAPPING1, 0x00 );
         SX1276Write( REG_DIOMAPPING2, 0x00 );
+
+        //Enable external TCXO connected to XTA pin (p.91)
+        SX1276Write( REG_TCXO, 0x19);
         break;
     }
 }
